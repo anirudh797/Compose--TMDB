@@ -135,7 +135,7 @@ fun Movies(
                         (uiState as MoviesUiState.Success).movies
                     } else {
                         (uiState as MoviesUiState.Success).movies.filter { movie ->
-                            movie.title.contains(debouncedQuery, ignoreCase = true)
+                            movie.title?.contains(debouncedQuery, ignoreCase = true) == true
                         }
                     }
                 }
@@ -330,7 +330,7 @@ fun ShowMovieList(
 
                         }
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text(text = movie.title,
+                        Text(text = movie.title ?: "",
                             style = Typography.bodyMedium
                         )
                     }
