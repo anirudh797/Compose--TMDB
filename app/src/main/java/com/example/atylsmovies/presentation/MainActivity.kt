@@ -1,6 +1,7 @@
 package com.example.atylsmovies.presentation
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -14,9 +15,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +28,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +47,9 @@ import coil.compose.AsyncImage
 import com.example.atylsmovies.presentation.theme.AtylsMoviesTheme
 import com.example.atylsmovies.presentation.theme.Typography
 import com.example.atylsmovies.data.model.Movie
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,10 +107,9 @@ fun Movies(
     modifier: Modifier = Modifier,
     navController: NavHostController
 ) {
-
-
     val uiState by viewModel.uiState.collectAsState()
     var retry by remember { mutableStateOf(false) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
 
     // Initial fetch
     LaunchedEffect(Unit) { viewModel.fetchMovies() }
@@ -114,16 +122,78 @@ fun Movies(
         }
     }
 
+
+    var filteredMovies by remember { mutableStateOf<List<Movie>>(emptyList()) }
+
+    LaunchedEffect(uiState, searchQuery) {
+        if (uiState is MoviesUiState.Success) {
+            snapshotFlow { searchQuery }
+                .debounce(300)
+                .collect { debouncedQuery ->
+                    Log.d("MoviesComposable", "Debounced Query: $debouncedQuery")
+                    filteredMovies = if (debouncedQuery.isBlank()) {
+                        (uiState as MoviesUiState.Success).movies
+                    } else {
+                        (uiState as MoviesUiState.Success).movies.filter { movie ->
+                            movie.title.contains(debouncedQuery, ignoreCase = true)
+                        }
+                    }
+                }
+        }
+    }
+
     when (val state = uiState) {
         is MoviesUiState.Loading -> LoadingState(modifier)
         is MoviesUiState.Success -> {
-            ShowMovieList(modifier = modifier, movies = state.movies) { movie ->
-                navController.currentBackStackEntry?.savedStateHandle?.set("movie", movie)
-                navController.navigate(
-                    ScreenName.DetailScreen.createRoute(
-                        movieId = movie.id,
-                    )
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Search Bar
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = {
+                        searchQuery = it
+                    },
+                    placeholder = { Text("Search movies") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = "Search"
+                        )
+                    },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp, end = 8.dp, bottom = 22.dp, top = 16.dp)
                 )
+
+
+                val showEmptyState = filteredMovies.isEmpty() && searchQuery.isNotBlank()
+
+                // Content based on filtered results
+                if (showEmptyState) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No results found.",
+                            style = Typography.bodyMedium
+                        )
+                    }
+                } else {
+                    ShowMovieList(
+                        modifier = Modifier.weight(1f),
+                        movies = filteredMovies
+                    ) { movie ->
+                        navController.currentBackStackEntry?.savedStateHandle?.set("movie", movie)
+                        navController.navigate(
+                            ScreenName.DetailScreen.createRoute(
+                                movieId = movie.id,
+                            )
+                        )
+                    }
+                }
             }
         }
         is MoviesUiState.Error -> {
