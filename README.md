@@ -5,11 +5,9 @@ A sample Android app built with Jetpack Compose, Kotlin, and TMDB API integratio
 
 ## Features
 
-- Browse popular, top-rated, and upcoming movies from TMDB
+- Browse popular movies from TMDB
 - Search for movies by title
 - View detailed movie information (overview, release date, rating, genres)
-- Watch trailers and view movie posters
-- Add movies to favorites
 - Responsive UI with Material Design and dark mode support
 - Built with modern Android architecture components
 
