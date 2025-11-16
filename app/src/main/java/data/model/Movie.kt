@@ -1,7 +1,10 @@
 package data.model
 
+import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class Movie(
     @SerializedName("id")
     val id: Int,
@@ -47,4 +50,4 @@ data class Movie(
 
     @SerializedName("adult")
     val adult: Boolean? = null
-)
+) : Parcelable
