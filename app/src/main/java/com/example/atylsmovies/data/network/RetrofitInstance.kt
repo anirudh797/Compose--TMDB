@@ -1,4 +1,4 @@
-package data.network
+package com.example.atylsmovies.data.network
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

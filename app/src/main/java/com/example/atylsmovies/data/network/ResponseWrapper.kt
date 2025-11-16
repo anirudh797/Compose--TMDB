@@ -1,4 +1,4 @@
-package data.network
+package com.example.atylsmovies.data.network
 
 sealed class ResponseWrapper<out T> {
     data class Success<out T>(val data: T) : ResponseWrapper<T>()

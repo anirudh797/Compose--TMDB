@@ -1,4 +1,4 @@
-package presentation
+package com.example.atylsmovies.presentation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -22,6 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -33,10 +38,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.example.atylsmovies.ui.theme.AtylsMoviesTheme
-import com.example.atylsmovies.ui.theme.Typography
-import data.model.Movie
-import data.network.ResponseWrapper
+import com.example.atylsmovies.presentation.theme.AtylsMoviesTheme
+import com.example.atylsmovies.presentation.theme.Typography
+import com.example.atylsmovies.data.model.Movie
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,32 +98,85 @@ fun Movies(
     modifier: Modifier = Modifier,
     navController: NavHostController
 ) {
-    val moviesState by viewModel.movies.collectAsState()
-    LaunchedEffect(Unit) {
-        viewModel.fetchMovies()
+
+
+    val uiState by viewModel.uiState.collectAsState()
+    var retry by remember { mutableStateOf(false) }
+
+    // Initial fetch
+    LaunchedEffect(Unit) { viewModel.fetchMovies() }
+
+    // Re-fetch when retry toggles true, then reset to false
+    LaunchedEffect(retry) {
+        if (retry) {
+            viewModel.fetchMovies()
+            retry = false
+        }
     }
-    when (moviesState) {
-        is ResponseWrapper.Success -> {
-            val movies = (moviesState as ResponseWrapper.Success<List<Movie>>).data
-            ShowMovieList(modifier = modifier, movies){
-                navController.currentBackStackEntry?.savedStateHandle?.set("movie", it)
+
+    when (val state = uiState) {
+        is MoviesUiState.Loading -> LoadingState(modifier)
+        is MoviesUiState.Success -> {
+            ShowMovieList(modifier = modifier, movies = state.movies) { movie ->
+                navController.currentBackStackEntry?.savedStateHandle?.set("movie", movie)
                 navController.navigate(
                     ScreenName.DetailScreen.createRoute(
-                        movieId = it.id,
+                        movieId = movie.id,
                     )
                 )
             }
         }
-        is ResponseWrapper.Error -> {
-            val error = (moviesState as ResponseWrapper.Error).message
-            Text(text = "Error: $error", modifier = modifier)
+        is MoviesUiState.Error -> {
+            ErrorState(modifier = modifier, message = state.message, onRetry = { retry = true })
         }
-        is ResponseWrapper.EmptySuccess -> {
-            Text(text = "No movies found.", modifier = modifier)
+        is MoviesUiState.Empty -> EmptyState(modifier)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoadingState(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+fun ErrorState(modifier: Modifier = Modifier, message: String, onRetry: () -> Unit) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = "Error: $message", style = Typography.bodyMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            // Retry button
+            androidx.compose.material3.Button(onClick = onRetry) {
+                Text(text = "Retry")
+            }
         }
     }
-
 }
+
+@Composable
+fun EmptyState(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = "No movies found.", style = Typography.bodyMedium)
+    }
+}
+
 
 
 @Composable

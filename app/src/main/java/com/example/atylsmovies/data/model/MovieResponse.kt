@@ -1,4 +1,4 @@
-package data.model
+package com.example.atylsmovies.data.model
 import com.google.gson.annotations.SerializedName
 
 data class MovieResponse(

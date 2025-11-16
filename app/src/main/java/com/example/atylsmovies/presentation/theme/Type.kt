@@ -1,4 +1,4 @@
-package com.example.atylsmovies.ui.theme
+package com.example.atylsmovies.presentation.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

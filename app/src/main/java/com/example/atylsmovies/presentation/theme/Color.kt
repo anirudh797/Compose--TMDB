@@ -1,4 +1,4 @@
-package com.example.atylsmovies.ui.theme
+package com.example.atylsmovies.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 

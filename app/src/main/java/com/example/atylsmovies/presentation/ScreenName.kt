@@ -1,4 +1,4 @@
-package presentation
+package com.example.atylsmovies.presentation
 
 sealed class ScreenName(val route: String) {
     object MainScreen : ScreenName("MovieList")
