@@ -3,6 +3,7 @@ package com.example.atylsmovies.utils
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import com.example.atylsmovies.BuildConfig
 
 object NetworkUtils {
 
@@ -17,5 +18,10 @@ object NetworkUtils {
         return caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
                 caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
                 caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+    }
+
+    fun apiKey(): String {
+        val fromBuild: String = BuildConfig.TMDB_API_KEY
+        return if (fromBuild.isBlank()) API_KEY else fromBuild
     }
 }

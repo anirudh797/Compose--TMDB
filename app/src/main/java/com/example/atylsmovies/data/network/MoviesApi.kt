@@ -8,5 +8,5 @@ import retrofit2.http.Query
 
 interface MoviesApi {
     @GET(NetworkUtils.TRENDING_MOVIES_ENDPOINT)
-    suspend fun getTrendingMovies(@Query("api_key") apiKey: String = NetworkUtils.API_KEY): Response<MovieResponse>
+    suspend fun getTrendingMovies(@Query("api_key") apiKey: String): Response<MovieResponse>
 }

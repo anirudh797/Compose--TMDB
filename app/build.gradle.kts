@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.InputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -10,6 +13,16 @@ android {
     namespace = "com.example.atylsmovies"
     compileSdk = 36
 
+    // Read api key from local.properties
+    val props = Properties()
+    val propsFile = rootProject.file("local.properties")
+    if (propsFile.exists()) {
+        propsFile.inputStream().use { input: InputStream ->
+            props.load(input)
+        }
+    }
+    val tmdbKey = (props.getProperty("TMDB_API_KEY") ?: "").trim()
+
     defaultConfig {
         applicationId = "com.example.atylsmovies"
         minSdk = 24
@@ -18,6 +31,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Expose as BuildConfig
+        buildConfigField("String", "TMDB_API_KEY", "\"$tmdbKey\"")
     }
 
     buildTypes {
@@ -38,6 +54,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

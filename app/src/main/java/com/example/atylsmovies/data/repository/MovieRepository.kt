@@ -52,7 +52,7 @@ class MovieRepository(private val appContext: Context) {
         return if (online) {
             // Online path: return network success or error, no cache fallback
             try {
-                val response = RetrofitInstance.api.getTrendingMovies()
+                val response = RetrofitInstance.api.getTrendingMovies(NetworkUtils.apiKey())
                 if (response.isSuccessful) {
                     val body: MovieResponse? = response.body()
                     val movies = body?.results.orEmpty()
