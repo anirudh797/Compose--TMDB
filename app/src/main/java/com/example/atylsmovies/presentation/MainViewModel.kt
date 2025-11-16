@@ -1,6 +1,7 @@
 package com.example.atylsmovies.presentation
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,8 +11,8 @@ import com.example.atylsmovies.data.repository.MovieRepository
 import com.example.atylsmovies.data.network.ResponseWrapper
 import kotlinx.coroutines.Dispatchers
 
-class MainViewModel : ViewModel() {
-    private val repository = MovieRepository()
+class MainViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = MovieRepository(application.applicationContext)
 
     // UI state exposed to the composables
     private val _uiState = MutableStateFlow<MoviesUiState>(MoviesUiState.Loading)

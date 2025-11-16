@@ -10,7 +10,7 @@ data class Movie(
     val id: Int,
 
     @SerializedName("title")
-    val title: String,
+    val title: String?="",
 
     @SerializedName("original_title")
     val originalTitle: String? = null,
